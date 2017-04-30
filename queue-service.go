@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"time"
 )
 
 const url string = "https://wrapapi.com/use/d4nc00per/stackoverflow/reviewQueues/0.0.5?wrapAPIKey=r7iMkqETsrMdynSjmpPFs29QRoNv1XPY"
@@ -10,6 +11,7 @@ const url string = "https://wrapapi.com/use/d4nc00per/stackoverflow/reviewQueues
 // Queue holds the name and count of a review queue
 type Queue struct {
 	Name, Count string
+	Time        time.Time
 }
 
 type apiResponse struct {
@@ -53,8 +55,15 @@ func (that *QueueService) GetQueues() ([]*Queue, error) {
 
 	queues := []*Queue{}
 
+	now := time.Now()
+
 	for _, r := range jsonResp.Data.ReviewQueues {
-		queues = append(queues, &r.Q)
+
+		current := &r.Q
+
+		current.Time = now
+
+		queues = append(queues, current)
 	}
 
 	return queues, nil

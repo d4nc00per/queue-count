@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -13,10 +14,26 @@ func main() {
 }
 
 func updateQueues(w http.ResponseWriter, r *http.Request) {
-
+	mongo := GetDbClient()
 	qs := NewQueueService(&HttpClient{})
 
-	qs.GetQueues()
+	queues, err := qs.GetQueues()
 
-	log.Printf("Retrieved queues.")
+	if err != nil {
+		mongo.Log(fmt.Sprintf("Unable to retrieve queues: %v", err))
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+
+	for _, q := range queues {
+		err := mongo.Queues().Insert(q)
+		if err != nil {
+			mongo.Log(fmt.Sprintf("Error storing the queues: %v", err))
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+	}
+
+	mongo.Log("Retrieved queues.")
+	w.WriteHeader(http.StatusOK)
 }
