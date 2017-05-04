@@ -1,21 +1,38 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
+var bind string
 var mongoURL string
 
 func main() {
+	mongoHost := os.Getenv("OPENSHIFT_MONGODB_DB_HOST")
+	if mongoHost != "" {
+		mongoURL = fmt.Sprintf("%s:%s", mongoHost, os.Getenv("OPENSHIFT_MONGODB_DB_PORT"))
+	} else {
+		mongoURL = "localhost:27017"
+	}
 
-	flag.StringVar(&mongoURL, "mongo", "localhost:27017", "The url for the mongo database")
+	ip := os.Getenv("OPENSHIFT_GO_IP")
+	port := os.Getenv("OPENSHIFT_GO_PORT")
+
+	if ip != "" {
+		bind = fmt.Sprintf("%s:%s", ip, port)
+	} else {
+		bind = "localhost:9191"
+	}
+
+	fmt.Printf("listening on %s...", bind)
+	fmt.Printf("using mongo on %s...", mongoURL)
 
 	http.HandleFunc("/update", updateQueues)
 
-	log.Fatal(http.ListenAndServe(":80", nil))
+	log.Fatal(http.ListenAndServe(bind, nil))
 }
 
 func updateQueues(w http.ResponseWriter, r *http.Request) {
