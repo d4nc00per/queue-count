@@ -13,7 +13,12 @@ var mongoURL string
 func main() {
 	mongoHost := os.Getenv("OPENSHIFT_MONGODB_DB_HOST")
 	if mongoHost != "" {
-		mongoURL = fmt.Sprintf("%s:%s", mongoHost, os.Getenv("OPENSHIFT_MONGODB_DB_PORT"))
+		mongoURL = fmt.Sprintf(
+			"%s:%s@%s:%s",
+			os.Getenv("OPENSHIFT_MONGODB_DB_USERNAME"),
+			os.Getenv("OPENSHIFT_MONGODB_DB_PASSWORD"),
+			mongoHost,
+			os.Getenv("OPENSHIFT_MONGODB_DB_PORT"))
 	} else {
 		mongoURL = "localhost:27017"
 	}
