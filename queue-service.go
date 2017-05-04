@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"time"
 )
 
@@ -18,18 +19,18 @@ type apiResponse struct {
 	Success bool
 	Data    struct {
 		ReviewQueues []*struct {
-			Q Queue
-		}
+			Q Queue `json:"queue"`
+		} `json:"review_queues"`
 	}
 }
 
 // QueueService implements methods to access the queues
 type QueueService struct {
-	Client *HttpClient
+	Client HTTPOperations
 }
 
 // NewQueueService creates a new instance
-func NewQueueService(client *HttpClient) *QueueService {
+func NewQueueService(client HTTPOperations) *QueueService {
 	return &QueueService{client}
 }
 
@@ -43,16 +44,19 @@ func (that *QueueService) GetQueues() ([]*Queue, error) {
 
 	var jsonResp apiResponse
 
+	log.Print(string(body))
+
 	err = json.Unmarshal(body, &jsonResp)
 
 	if err != nil {
 		return nil, err
 	}
 
+	log.Printf("%v", jsonResp)
+
 	if !jsonResp.Success {
 		return nil, errors.New("Unsuccessful request")
 	}
-
 	queues := []*Queue{}
 
 	now := time.Now()
