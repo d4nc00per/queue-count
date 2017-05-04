@@ -7,14 +7,14 @@ import (
 )
 
 // GetDbClient will start a new session and return a client
-func GetDbClient() *DbClient {
-	sess, err := mgo.Dial("localhost:27017")
+func GetDbClient(url string) *DbClient {
+	sess, err := mgo.Dial(url)
 
 	if err != nil {
 		panic(err)
 	}
 
-	db := sess.DB("test")
+	db := sess.DB("queues")
 
 	return &DbClient{
 		session: sess,
