@@ -7,11 +7,17 @@ import (
 	"net/http"
 )
 
-type HttpClient struct {
+// HTTPClient implements the http operations
+type HTTPClient struct {
+}
+
+// HTTPOperations defines the http operations
+type HTTPOperations interface {
+	Get(url string) ([]byte, error)
 }
 
 //Get an internet resource
-func (that *HttpClient) Get(url string) ([]byte, error) {
+func (that *HTTPClient) Get(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 
 	if err != nil {
