@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"time"
 )
 
@@ -44,7 +43,7 @@ func (that *QueueService) GetQueues() ([]*Queue, error) {
 
 	var jsonResp apiResponse
 
-	log.Print(string(body))
+	// log.Print(string(body))
 
 	err = json.Unmarshal(body, &jsonResp)
 
@@ -52,7 +51,7 @@ func (that *QueueService) GetQueues() ([]*Queue, error) {
 		return nil, err
 	}
 
-	log.Printf("%v", jsonResp)
+	// log.Printf("%v", jsonResp)
 
 	if !jsonResp.Success {
 		return nil, errors.New("Unsuccessful request")

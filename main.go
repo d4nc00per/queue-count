@@ -11,29 +11,11 @@ var bind string
 var mongoURL string
 
 func main() {
-	mongoHost := os.Getenv("OPENSHIFT_MONGODB_DB_HOST")
-	if mongoHost != "" {
-		mongoURL = fmt.Sprintf(
-			"%s:%s@%s:%s",
-			os.Getenv("OPENSHIFT_MONGODB_DB_USERNAME"),
-			os.Getenv("OPENSHIFT_MONGODB_DB_PASSWORD"),
-			mongoHost,
-			os.Getenv("OPENSHIFT_MONGODB_DB_PORT"))
-	} else {
-		mongoURL = "localhost:27017"
-	}
+	setupMongoURL()
+	setupAppURL()
 
-	ip := os.Getenv("OPENSHIFT_GO_IP")
-	port := os.Getenv("OPENSHIFT_GO_PORT")
-
-	if ip != "" {
-		bind = fmt.Sprintf("%s:%s", ip, port)
-	} else {
-		bind = "localhost:9191"
-	}
-
-	fmt.Printf("listening on %s...", bind)
-	fmt.Printf("using mongo on %s...", mongoURL)
+	fmt.Printf("listening on %s...\n", bind)
+	fmt.Printf("using mongo on %s...\n", mongoURL)
 
 	http.HandleFunc("/update", updateQueues)
 
@@ -64,7 +46,31 @@ func updateQueues(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	log.Print("Request completed.")
-	mongo.Log("Request completed.")
+	log.Print("Queues updated.")
 	w.WriteHeader(http.StatusOK)
+}
+
+func setupAppURL() {
+	ip := os.Getenv("OPENSHIFT_GO_IP")
+	port := os.Getenv("OPENSHIFT_GO_PORT")
+
+	if ip != "" {
+		bind = fmt.Sprintf("%s:%s", ip, port)
+	} else {
+		bind = "localhost:9191"
+	}
+}
+
+func setupMongoURL() {
+	mongoHost := os.Getenv("OPENSHIFT_MONGODB_DB_HOST")
+	if mongoHost != "" {
+		mongoURL = fmt.Sprintf(
+			"%s:%s@%s:%s",
+			os.Getenv("OPENSHIFT_MONGODB_DB_USERNAME"),
+			os.Getenv("OPENSHIFT_MONGODB_DB_PASSWORD"),
+			mongoHost,
+			os.Getenv("OPENSHIFT_MONGODB_DB_PORT"))
+	} else {
+		mongoURL = "localhost:27017"
+	}
 }
