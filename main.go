@@ -18,6 +18,10 @@ func main() {
 	fmt.Printf("using mongo on %s...\n", mongoURL)
 
 	http.HandleFunc("/update", updateQueues)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./views/index.html")
+		log.Print("Index returned.")
+	})
 
 	log.Fatal(http.ListenAndServe(bind, nil))
 }
