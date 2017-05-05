@@ -22,6 +22,10 @@ func main() {
 		http.ServeFile(w, r, "./views/index.html")
 		log.Print("Index returned.")
 	})
+	http.HandleFunc("/d3", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./views/d3.html")
+		log.Print("D3 returned.")
+	})
 
 	log.Fatal(http.ListenAndServe(bind, nil))
 }
