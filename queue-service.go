@@ -59,7 +59,7 @@ func (that *QueueService) GetQueues() ([]*Queue, error) {
 	}
 	queues := []*Queue{}
 
-	now := time.Now()
+	now := time.Now().UTC()
 
 	for _, r := range jsonResp.Data.ReviewQueues {
 
