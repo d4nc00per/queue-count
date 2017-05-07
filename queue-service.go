@@ -10,8 +10,9 @@ const url string = "https://wrapapi.com/use/d4nc00per/stackoverflow/reviewQueues
 
 // Queue holds the name and count of a review queue
 type Queue struct {
-	Name, Count string
-	Time        time.Time
+	Name  string    `bson:"name"`
+	Count string    `bson:"count"`
+	Time  time.Time `bson:"time"`
 }
 
 type apiResponse struct {

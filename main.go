@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 var bind string
@@ -18,14 +21,23 @@ func main() {
 	fmt.Printf("using mongo on %s...\n", mongoURL)
 
 	http.HandleFunc("/update", updateQueues)
+	http.HandleFunc("/data", getQueues)
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./views/index.html")
 		log.Print("Index returned.")
 	})
+
 	http.HandleFunc("/d3", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./views/d3.html")
 		log.Print("D3 returned.")
 	})
+
+	scripts := http.FileServer(http.Dir("scripts"))
+	http.Handle("/scripts/", http.StripPrefix("/scripts/", scripts))
+
+	d3 := http.FileServer(http.Dir("d3"))
+	http.Handle("/d3/", http.StripPrefix("/d3/", d3))
 
 	log.Fatal(http.ListenAndServe(bind, nil))
 }
@@ -56,6 +68,39 @@ func updateQueues(w http.ResponseWriter, r *http.Request) {
 
 	log.Print("Queues updated.")
 	w.WriteHeader(http.StatusOK)
+}
+
+func getQueues(w http.ResponseWriter, r *http.Request) {
+	log.Println("Retrieving the data")
+
+	var queues []*Queue
+	mongo := GetDbClient(mongoURL)
+	err := mongo.Queues().Find(bson.M{}).All(&queues)
+
+	log.Printf("Queue count:%d", len(queues))
+	if err != nil {
+		mongo.Log(fmt.Sprintf("Error querying for the queues: %v", err))
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+
+	data, err := json.Marshal(queues)
+
+	if err != nil {
+		mongo.Log(fmt.Sprintf("Error marshalling the queues: %v", err))
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+
+	_, err = w.Write(data)
+
+	if err != nil {
+		mongo.Log(fmt.Sprintf("Error marshalling the queues: %v", err))
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+	log.Println("Returned the data")
+	mongo.Log("Returned the data")
 }
 
 func setupAppURL() {
