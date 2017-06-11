@@ -69,22 +69,45 @@ func updateQueues(w http.ResponseWriter, r *http.Request) {
 	log.Print("Queues updated.")
 	w.WriteHeader(http.StatusOK)
 }
-
 func getQueues(w http.ResponseWriter, r *http.Request) {
 	log.Println("Retrieving the data")
 
-	var queues []*Queue
 	mongo := GetDbClient(mongoURL)
-	err := mongo.Queues().Find(bson.M{}).All(&queues)
 
-	log.Printf("Queue count:%d", len(queues))
+	pipe := mongo.Queues().Pipe([]bson.M{
+		{
+			"$group": bson.M{
+				"_id": "$name",
+				"counts": bson.M{
+					"$addToSet": bson.M{
+						"time":  "$time",
+						"count": "$count"}}},
+		},
+		{
+			"$unwind": "$counts",
+		},
+		{
+			"$sort": bson.M{"counts.time": 1},
+		},
+		{
+			"$group": bson.M{
+				"_id": "$_id",
+				"counts": bson.M{
+					"$push": bson.M{
+						"time":  "$counts.time",
+						"count": "$counts.count"}}},
+		}})
+
+	resp := []bson.M{}
+	err := pipe.All(&resp)
+
 	if err != nil {
 		mongo.Log(fmt.Sprintf("Error querying for the queues: %v", err))
 		w.WriteHeader(http.StatusServiceUnavailable)
 		return
 	}
 
-	data, err := json.Marshal(queues)
+	data, err := json.Marshal(resp)
 
 	if err != nil {
 		mongo.Log(fmt.Sprintf("Error marshalling the queues: %v", err))
