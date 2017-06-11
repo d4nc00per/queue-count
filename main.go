@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"gopkg.in/mgo.v2/bson"
 )
@@ -74,7 +75,16 @@ func getQueues(w http.ResponseWriter, r *http.Request) {
 
 	mongo := GetDbClient(mongoURL)
 
+	t, _ := time.Parse("2006-01-02", "2017-06-10")
+
 	pipe := mongo.Queues().Pipe([]bson.M{
+		{
+			"$match": bson.M{
+				"time": bson.M{
+					"$gt": t,
+				},
+			},
+		},
 		{
 			"$group": bson.M{
 				"_id": "$name",
